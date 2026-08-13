@@ -15,7 +15,7 @@ dari helper `test/helpers/logcatHelper.js` di project WebdriverIO.
 - **Grouping per activity** — separator `## NamaActivity` muncul saat activity berubah.
 - **Parsing OkHttp** — request (`--> METHOD url`), body request, response
   (`<-- STATUS url (durasi ms)`), dan body response. Header HTTP dibuang.
-  Body bisa di-collapse (prettify JSON).
+  Detail body tampil di panel samping (JSON prettified + syntax highlight + copy).
 - **Export** — download hasil sebagai file `.log`.
 - **Clear log** — kosongkan tampilan.
 
@@ -67,6 +67,45 @@ dengan grouping per activity.
 
 > Dev mode memakai Vite proxy — browser cukup membuka port 5173 saja.
 > Semua request `/api` dan WebSocket `/ws` diteruskan otomatis ke backend.
+
+## Cara pakai
+
+### Alur umum (setiap sesi)
+
+1. Pastikan device/emulator terhubung: `adb devices` → status `device`.
+2. Buka http://localhost:5173.
+3. Klik **Start** — buffer logcat device dibersihkan dulu (`adb logcat -c`),
+   lalu streaming dimulai.
+4. Buka / gunakan aplikasi di device — request & response OkHttp langsung
+   muncul di daftar.
+5. Klik salah satu log untuk lihat detail **Request Body** / **Response Body**
+   (JSON prettified, tombol copy di pojok kanan atas code block).
+6. Selesai: klik **Stop**, lalu **Export** untuk menyimpan hasil ke file `.log`,
+   atau **Clear** untuk mengosongkan tampilan.
+
+### Pakai dengan aplikasi lain (bukan SoulParking)
+
+CatDroid menangkap traffic dari **aplikasi apa pun yang memakai OkHttp** —
+yang perlu diganti cuma konfigurasi:
+
+1. **App package** untuk grouping activity — set env saat start:
+   ```bash
+   ANDROID_APP_PACKAGE=com.example.myapp npm run dev
+   ```
+   (atau ubah default di `server/index.js`). Grouping `## Activity` hanya
+   muncul untuk activity milik package ini.
+2. **Filter URL** — ganti di kolom **Server / URL Filter** di UI dengan
+   domain API aplikasi tersebut, mis. `api.myapp.com`. Bisa lebih dari satu,
+   dipisah koma. Kosongkan untuk menampilkan semua traffic.
+3. **Device dengan adb** — kalau pakai lebih dari satu device, `adb logcat`
+   akan gagal; pastikan hanya satu device terhubung (atau atur `ADB_PATH`
+   menunjuk adb tertentu).
+
+> **Syarat penting:** aplikasi target **harus memakai OkHttp dengan logging
+> aktif** — baris log `okhttp.OkHttpClient` harus muncul di logcat. Kalau app
+> pakai library lain (mis. Retrofit tanpa interceptor logging, atau library
+> networking non-OkHttp), traffic tidak akan terlihat. Untuk app berbasis
+> Retrofit, pastikan ada `HttpLoggingInterceptor` level BASIC/HEADERS/BODY.
 
 ## Produksi
 
