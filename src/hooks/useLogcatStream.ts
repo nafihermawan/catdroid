@@ -18,10 +18,13 @@ export function useLogcatStream() {
     running: false,
   });
   const [error, setError] = useState<string | null>(null);
-  const [config, setConfig] = useState<{ adbPath: string; appPackage: string } | null>(null);
-  const [keywordInput, setKeywordInput] = useState(
-    '10.10.0.2:5000, devapi.soulparking.co.id'
-  );
+  const [config, setConfig] = useState<{
+    adbPath: string;
+    appPackage: string;
+    urlFilterKeywords: string[];
+  } | null>(null);
+  // Default keyword filter dari server (bisa di-set via .env), lalu editable dari UI.
+  const [keywordInput, setKeywordInput] = useState('');
 
   const wsRef = useRef<WebSocket | null>(null);
   const seqRef = useRef(0);
@@ -107,7 +110,16 @@ export function useLogcatStream() {
 
     fetch('/api/config')
       .then((r) => r.json())
-      .then(setConfig)
+      .then((cfg) => {
+        setConfig(cfg);
+        // Isi default keyword filter dari server hanya jika user belum mengubahnya
+        // (keywordInput masih kosong).
+        setKeywordInput((current) =>
+          current === '' && cfg.urlFilterKeywords?.length
+            ? cfg.urlFilterKeywords.join(', ')
+            : current
+        );
+      })
       .catch(() => {});
 
     return () => {

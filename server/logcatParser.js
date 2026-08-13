@@ -4,7 +4,7 @@ import readline from 'readline';
 // ── Konfigurasi default (bisa di-override via constructor/env) ────────
 const DEFAULT_ADB_PATH = 'adb';
 const DEFAULT_APP_PACKAGE =
-  process.env.ANDROID_APP_PACKAGE || 'id.spn.soulparkingofficer.dev';
+  process.env.ANDROID_APP_PACKAGE || 'com.example.myapp';
 
 // Strip prefix logcat "MM-DD HH:mm:ss.mmm I/tag(pid):" → sisa pesan.
 // Format `-v time`: "08-11 15:45:10.990 I/okhttp.OkHttpClient(16720): pesan"
@@ -13,8 +13,8 @@ export function stripPrefix(line) {
 }
 
 // Ambil nama activity dari baris log transisi (beberapa format umum).
-//   Displayed id.spn.../id.spn...screen.SPNLoginActivity: +1s234ms
-//   START u0 {cmp=id.spn.../id.spn...screen.SPNMainActivity}
+//   Displayed com.example.myapp/.ui.LoginActivity: +1s234ms
+//   START u0 {cmp=com.example.myapp/.screen.MainActivity}
 //   Displayed com.../.ui.HomeActivity
 export function extractActivity(line) {
   const m =

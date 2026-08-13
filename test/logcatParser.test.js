@@ -14,25 +14,25 @@ import {
 const PREFIX = '08-13 10:15:22.123';
 
 const LOGIN_REQUEST_LINE =
-  `${PREFIX} I/okhttp.OkHttpClient(23456): --> POST https://devapi.soulparking.co.id/api/login`;
+  `${PREFIX} I/okhttp.OkHttpClient(23456): --> POST https://api.example.com/login`;
 const LOGIN_REQUEST_BODY_LINE =
-  `${PREFIX} I/okhttp.OkHttpClient(23456): {"username":"nafi","password":"secret","device":"Android"}`;
+  `${PREFIX} I/okhttp.OkHttpClient(23456): {"username":"user","password":"secret","device":"Android"}`;
 const LOGIN_REQUEST_END_LINE =
   `${PREFIX} I/okhttp.OkHttpClient(23456): --> END POST (73-byte body)`;
 
 const LOGIN_RESPONSE_LINE =
-  `${PREFIX} I/okhttp.OkHttpClient(23456): <-- 200 https://devapi.soulparking.co.id/api/login (147ms)`;
+  `${PREFIX} I/okhttp.OkHttpClient(23456): <-- 200 https://api.example.com/login (147ms)`;
 const LOGIN_RESPONSE_HEADER_LINE =
   `${PREFIX} I/okhttp.OkHttpClient(23456): content-type: application/json`;
 const LOGIN_RESPONSE_BODY_LINE =
-  `${PREFIX} I/okhttp.OkHttpClient(23456): {"token":"abc123","user":{"name":"Nafi"}}`;
+  `${PREFIX} I/okhttp.OkHttpClient(23456): {"token":"abc123","user":{"name":"User"}}`;
 const LOGIN_RESPONSE_END_LINE =
   `${PREFIX} I/okhttp.OkHttpClient(23456): <-- END HTTP (38-byte body)`;
 
 const ACTIVITY_START_LINE =
-  `${PREFIX} I/ActivityTaskManager(567): START u0 {cmp=id.spn.soulparkingofficer.dev/id.spn.soulparkingofficer.dev.screen.SPNMainActivity}`;
+  `${PREFIX} I/ActivityTaskManager(567): START u0 {cmp=com.example.myapp/com.example.myapp.screen.MainActivity}`;
 const ACTIVITY_DISPLAYED_LINE =
-  `${PREFIX} I/ActivityTaskManager(567): Displayed id.spn.soulparkingofficer.dev/id.spn.soulparkingofficer.dev.screen.SPNMainActivity: +852ms`;
+  `${PREFIX} I/ActivityTaskManager(567): Displayed com.example.myapp/com.example.myapp.screen.MainActivity: +852ms`;
 
 const NON_OKHTTP_LINE =
   `${PREFIX} D/eglCodecCommon(23456): setVertexArrayObject: set vao to 1 (0x1) 0 0`;
@@ -48,18 +48,18 @@ function run(lines, options) {
 test('stripPrefix menghapus prefix logcat', () => {
   assert.equal(
     stripPrefix(LOGIN_REQUEST_LINE),
-    '--> POST https://devapi.soulparking.co.id/api/login'
+    '--> POST https://api.example.com/login'
   );
 });
 
 test('extractActivity mengenali format START / Displayed / cmp=', () => {
   assert.equal(
     extractActivity(ACTIVITY_START_LINE),
-    'id.spn.soulparkingofficer.dev.screen.SPNMainActivity'
+    'com.example.myapp.screen.MainActivity'
   );
   assert.equal(
     extractActivity(ACTIVITY_DISPLAYED_LINE),
-    'id.spn.soulparkingofficer.dev.screen.SPNMainActivity'
+    'com.example.myapp.screen.MainActivity'
   );
   // Format "Displayed com.../.ui.HomeActivity"
   assert.equal(extractActivity('Displayed com.example.app/.ui.HomeActivity: +120ms'), '.ui.HomeActivity');
@@ -94,13 +94,13 @@ test('request dengan body: emit request, body (header dibuang), tanpa END body t
     type: 'request',
     id: 1,
     method: 'POST',
-    url: 'https://devapi.soulparking.co.id/api/login',
-    message: '--> POST https://devapi.soulparking.co.id/api/login',
+    url: 'https://api.example.com/login',
+    message: '--> POST https://api.example.com/login',
   });
   assert.deepEqual(events[1], {
     type: 'body',
     id: 1,
-    body: '{"username":"nafi","password":"secret","device":"Android"}',
+    body: '{"username":"user","password":"secret","device":"Android"}',
   });
 });
 
@@ -117,14 +117,14 @@ test('response dengan body: emit response lalu body', () => {
     type: 'response',
     id: 1,
     status: 200,
-    url: 'https://devapi.soulparking.co.id/api/login',
+    url: 'https://api.example.com/login',
     durationMs: 147,
-    message: '<-- 200 https://devapi.soulparking.co.id/api/login (147ms)',
+    message: '<-- 200 https://api.example.com/login (147ms)',
   });
   assert.deepEqual(events[1], {
     type: 'body',
     id: 1,
-    body: '{"token":"abc123","user":{"name":"Nafi"}}',
+    body: '{"token":"abc123","user":{"name":"User"}}',
   });
 });
 
@@ -140,7 +140,7 @@ test('transisi activity: emit event activity hanya saat nama berubah (dengan sho
   assert.equal(events.filter((e) => e.type === 'activity').length, 1);
   assert.deepEqual(
     events.find((e) => e.type === 'activity'),
-    { type: 'activity', name: 'SPNMainActivity' }
+    { type: 'activity', name: 'MainActivity' }
   );
 });
 

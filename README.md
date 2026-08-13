@@ -11,7 +11,7 @@ dari helper `test/helpers/logcatHelper.js` di project WebdriverIO.
 - **Tampilan real-time** — request, response, dan body muncul tanpa refresh; auto-scroll
   bisa di-toggle.
 - **Filter keyword URL** — hanya baris yang mengandung keyword (mis. `10.10.0.2:5000`,
-  `devapi.soulparking.co.id`) yang ditampilkan. Keyword **bisa diubah dari UI**.
+  `api.example.com`) yang ditampilkan. Keyword **bisa diubah dari UI**.
 - **Grouping per activity** — separator `## NamaActivity` muncul saat activity berubah.
 - **Parsing OkHttp** — request (`--> METHOD url`), body request, response
   (`<-- STATUS url (durasi ms)`), dan body response. Header HTTP dibuang.
@@ -83,20 +83,17 @@ dengan grouping per activity.
 6. Selesai: klik **Stop**, lalu **Export** untuk menyimpan hasil ke file `.log`,
    atau **Clear** untuk mengosongkan tampilan.
 
-### Pakai dengan aplikasi lain (bukan SoulParking)
+### Menyesuaikan dengan aplikasi target
 
 CatDroid menangkap traffic dari **aplikasi apa pun yang memakai OkHttp** —
-yang perlu diganti cuma konfigurasi:
+cukup sesuaikan `.env` (lihat [Konfigurasi](#konfigurasi-env)):
 
-1. **App package** untuk grouping activity — set env saat start:
-   ```bash
-   ANDROID_APP_PACKAGE=com.example.myapp npm run dev
-   ```
-   (atau ubah default di `server/index.js`). Grouping `## Activity` hanya
-   muncul untuk activity milik package ini.
-2. **Filter URL** — ganti di kolom **Server / URL Filter** di UI dengan
-   domain API aplikasi tersebut, mis. `api.myapp.com`. Bisa lebih dari satu,
-   dipisah koma. Kosongkan untuk menampilkan semua traffic.
+1. **App package** untuk grouping activity — set `ANDROID_APP_PACKAGE`
+   di `.env`, mis. `com.example.myapp`. Grouping `## Activity` hanya muncul
+   untuk activity milik package ini.
+2. **Filter URL** — set `URL_FILTER_KEYWORDS` di `.env` (default yang tampil
+   di kolom **Server / URL Filter**), atau ubah langsung di kolom filter di UI.
+   Bisa lebih dari satu, dipisah koma. Kosongkan untuk menampilkan semua traffic.
 3. **Device dengan adb** — kalau pakai lebih dari satu device, `adb logcat`
    akan gagal; pastikan hanya satu device terhubung (atau atur `ADB_PATH`
    menunjuk adb tertentu).
@@ -116,14 +113,22 @@ npm start        # serve dist + API di http://localhost:3001
 
 ## Konfigurasi (env)
 
+Konfigurasi lokal disimpan di file **`.env`** (tidak ikut di-commit — aman).
+Buat dari template:
+
+```bash
+cp .env.example .env   # lalu isi nilaimu
+```
+
 | Variable              | Default                          | Keterangan                                  |
 | --------------------- | -------------------------------- | ------------------------------------------- |
-| `ANDROID_APP_PACKAGE` | `id.spn.soulparkingofficer.dev`  | Package app untuk grouping activity         |
+| `ANDROID_APP_PACKAGE` | `com.example.myapp`             | Package app untuk grouping activity         |
+| `URL_FILTER_KEYWORDS` | *(kosong)*                       | Keyword filter URL default di UI (dipisah koma) |
 | `ADB_PATH`            | `adb`                            | Path biner adb (mis. `/opt/homebrew/bin/adb`) |
 | `PORT`                | `3001`                           | Port server backend                         |
 
-Keyword filter URL default di UI: `10.10.0.2:5000, devapi.soulparking.co.id`
-— ubah langsung di kolom filter pada halaman.
+Keyword filter URL bisa diubah langsung di kolom filter pada halaman — nilainya
+tidak ditimpa oleh default dari server setelah halaman dimuat.
 
 ## Test
 

@@ -30,7 +30,7 @@ export function FilterBar({ keywords, onChange }: Props) {
           onKeyDown={(e) => {
             if (e.key === 'Enter') apply();
           }}
-          placeholder="10.10.0.2:5000, devapi.soulparking.co.id"
+          placeholder="10.10.0.2:5000, api.example.com"
           spellCheck={false}
           className="min-w-0 flex-1 rounded-md border border-[#2c3542] bg-[#0d1016] px-2.5 py-1.5 font-mono text-xs text-zinc-100 transition-colors placeholder:text-zinc-600 hover:border-[#3d4a5c] focus:border-[#4d9fff]/70 focus:outline-none focus:ring-1 focus:ring-[#4d9fff]/30"
         />

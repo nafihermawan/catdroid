@@ -111,8 +111,8 @@ export function DetailPanel({ detail, onClose }: Props) {
             </div>
           )}
 
-          <CodeBlock title="Request Body" body={detail.requestBody} />
-          <CodeBlock title="Response Body" body={detail.responseBody} />
+          <CodeBlock title="Request" body={detail.requestBody} />
+          <CodeBlock title="Response" body={detail.responseBody} />
         </div>
       )}
     </aside>

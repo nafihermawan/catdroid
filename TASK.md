@@ -21,7 +21,7 @@ membuka logcat mentah atau Android Studio.
 - Frontend menampilkan log real-time: method, status (warna semantik), durasi, URL.
 - Detail request/response body tampil menyamping dengan syntax highlight JSON + tombol copy.
 - Grouping `## Activity` saat perpindahan halaman.
-- Filter keyword URL dapat diubah dari UI (default: `10.10.0.2:5000`, `devapi.soulparking.co.id`).
+- Filter keyword URL dapat diubah dari UI (default: `10.10.0.2:5000`, `api.example.com`).
 - Error handling jelas untuk: adb tidak terpasang, device tidak terdeteksi, status unauthorized.
 - Mobile-first responsive; desktop dua kolom (list kiri, detail kanan).
 

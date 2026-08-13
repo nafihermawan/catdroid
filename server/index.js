@@ -10,7 +10,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT || 3001;
 const ADB_PATH = process.env.ADB_PATH || 'adb';
 const APP_PACKAGE =
-  process.env.ANDROID_APP_PACKAGE || 'id.spn.soulparkingofficer.dev';
+  process.env.ANDROID_APP_PACKAGE || 'com.example.myapp';
+// Keyword filter URL default — di-set dari .env lokal (tidak ikut git).
+const URL_FILTER_KEYWORDS = (process.env.URL_FILTER_KEYWORDS || '').split(',').map((k) => k.trim()).filter(Boolean);
 
 const app = express();
 app.use(express.json());
@@ -42,7 +44,11 @@ wss.on('connection', (ws) => {
 
 // ── REST: config & kontrol capture ────────────────────────────────────
 app.get('/api/config', (_req, res) => {
-  res.json({ adbPath: ADB_PATH, appPackage: APP_PACKAGE });
+  res.json({
+    adbPath: ADB_PATH,
+    appPackage: APP_PACKAGE,
+    urlFilterKeywords: URL_FILTER_KEYWORDS,
+  });
 });
 
 app.post('/api/start', async (_req, res) => {

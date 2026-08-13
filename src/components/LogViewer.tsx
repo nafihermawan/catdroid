@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
 import type { ExchangeDetail, LogEntry } from '../types';
 import { DetailPanel } from './DetailPanel';
 
@@ -7,6 +8,7 @@ interface Props {
   keywords: string[];
   autoScroll: boolean;
   onToggleAutoScroll: () => void;
+  toolbarActions?: ReactNode;
 }
 
 const textSecondary = 'text-zinc-400';
@@ -167,7 +169,7 @@ function ToolbarToggle({
   );
 }
 
-export function LogViewer({ entries, keywords, autoScroll, onToggleAutoScroll }: Props) {
+export function LogViewer({ entries, keywords, autoScroll, onToggleAutoScroll, toolbarActions }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [showFiltered, setShowFiltered] = useState(true);
   const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -216,9 +218,12 @@ export function LogViewer({ entries, keywords, autoScroll, onToggleAutoScroll }:
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex flex-wrap items-center gap-4 border-b border-[#1e2430] bg-[#12161d] px-3 py-1.5">
-        <ToolbarToggle checked={autoScroll} onChange={onToggleAutoScroll} label="Auto-scroll" />
-        <ToolbarToggle checked={showFiltered} onChange={() => setShowFiltered((s) => !s)} label="Filter" />
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-[#1e2430] bg-[#12161d] px-3 py-1.5">
+        {toolbarActions}
+        <div className="flex items-center gap-4">
+          <ToolbarToggle checked={autoScroll} onChange={onToggleAutoScroll} label="Auto-scroll" />
+          <ToolbarToggle checked={showFiltered} onChange={() => setShowFiltered((s) => !s)} label="Filter" />
+        </div>
         <span className="ml-auto text-[11px] tabular-nums text-zinc-600">
           {items.length} entries
         </span>
