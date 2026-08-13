@@ -2,3 +2,7 @@ node_modules
 dist
 *.log
 .DS_Store
+.commandcode/
+
+# Konfigurasi lokal (package app dll.) — jangan pernah di-commit
+.env
