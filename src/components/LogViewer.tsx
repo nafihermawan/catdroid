@@ -378,9 +378,9 @@ export function LogViewer({ entries, keywords, autoScroll, onToggleAutoScroll, t
           >
             {sections.length === 0 ? (
               <div className="flex h-full flex-col items-center justify-center gap-2 p-6 text-center">
-                <p className="text-sm text-slate-400">Belum ada log yang tertangkap</p>
+                <p className="text-sm text-slate-400">Belum ada log yang terbaca.</p>
                 <p className="max-w-sm text-xs leading-relaxed text-slate-500">
-                  Tekan <span className="rounded bg-emerald-500/15 px-1 py-0.5 font-mono text-emerald-400">Start</span> untuk
+                  Click <span className="rounded bg-emerald-500/15 px-1 py-0.5 font-mono text-emerald-400">Play</span> untuk
                   mulai capture, lalu buka halaman di app. Request &amp; response OkHttp akan
                   muncul di sini dengan grouping per activity.
                 </p>
