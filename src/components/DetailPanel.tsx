@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Check, Copy, WrapText } from 'lucide-react';
 import type { ExchangeDetail } from '../types';
 import { formatJson, highlightJson } from '../utils/format';
 import { MethodBadge, StatusBadge } from './badges';
@@ -8,15 +9,21 @@ interface Props {
   onClose: () => void;
 }
 
-// Code block dengan judul + tombol copy ikon di pojok kanan.
+// Code block dengan judul + action bar floating (toggle Raw/Pretty + copy).
 function CodeBlock({ title, body }: { title: string; body: string | null }) {
   const [copied, setCopied] = useState(false);
+  // Default pretty; `raw` = string asli dari log, tanpa indentasi.
+  const [raw, setRaw] = useState(false);
   if (!body) return null;
-  const formatted = formatJson(body);
+  const text = raw ? body : formatJson(body);
+  const toggleLabel = raw ? 'Pretty' : 'Raw';
+  const toggleHint = raw
+    ? 'Switch to Formatted JSON View'
+    : 'Switch to Unformatted Raw View';
 
   const copy = async () => {
     try {
-      await navigator.clipboard.writeText(formatted);
+      await navigator.clipboard.writeText(text);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {
@@ -26,32 +33,47 @@ function CodeBlock({ title, body }: { title: string; body: string | null }) {
 
   return (
     <section>
-      <h3 className="px-0.5 pb-1 text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+      <h3 className="px-0.5 pb-1 font-mono text-[11px] font-semibold uppercase tracking-wider text-slate-500">
         {title}
       </h3>
-      {/* Container relatif: tombol copy overlay di pojok kanan atas,
+      {/* Container relatif: action bar overlay di pojok kanan atas,
           tetap di dalam border & tidak ikut scroll konten JSON. */}
       <div className="relative">
-        <button
-          onClick={copy}
-          title={copied ? 'Copied' : 'Salin body'}
-          aria-label={copied ? 'Copied' : 'Salin body'}
-          className="absolute right-3 top-3 z-10 inline-flex h-6 w-6 items-center justify-center rounded-md border border-[#2c3542] bg-[#171c25]/95 text-zinc-300 shadow-sm transition-colors hover:border-[#3d4a5c] hover:bg-[#1c222d] hover:text-white"
-        >
-          {copied ? (
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-              <path d="M20 6L9 17l-5-5" />
-            </svg>
+        <div className="absolute right-3 top-3 z-10 flex items-center gap-1.5 rounded-lg border border-slate-700/60 bg-slate-900/80 p-1 shadow-md backdrop-blur-sm">
+          <button
+            type="button"
+            onClick={() => setRaw((r) => !r)}
+            title={toggleHint}
+            aria-label={toggleHint}
+            className={`flex items-center gap-1 rounded border px-2 py-1 font-mono text-[11px] font-medium transition-colors hover:bg-slate-700/60 hover:text-white ${
+              raw
+                ? 'border-slate-700 bg-slate-800 text-sky-400'
+                : 'border-transparent text-slate-300'
+            }`}
+          >
+            <WrapText className="h-3.5 w-3.5" />
+            {toggleLabel}
+          </button>
+          <button
+            type="button"
+            onClick={copy}
+            title={copied ? 'Copied' : 'Salin body'}
+            aria-label={copied ? 'Copied' : 'Salin body'}
+            className="rounded p-1 text-slate-300 transition-colors hover:bg-slate-700/60 hover:text-white"
+          >
+            {copied ? (
+              <Check className="h-3.5 w-3.5" />
+            ) : (
+              <Copy className="h-3.5 w-3.5" />
+            )}
+          </button>
+        </div>
+        <pre className="max-h-72 overflow-auto whitespace-pre rounded-md border border-slate-800 bg-slate-950 p-3 font-mono text-[11px] leading-relaxed text-slate-300">
+          {raw ? (
+            <code>{body}</code>
           ) : (
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-              {/* clipboard: dua persegi tumpuk */}
-              <rect x="9" y="9" width="11" height="11" rx="2" />
-              <path d="M5 15V5a2 2 0 0 1 2-2h10" />
-            </svg>
+            <code dangerouslySetInnerHTML={{ __html: highlightJson(text) }} />
           )}
-        </button>
-        <pre className="max-h-72 overflow-auto whitespace-pre rounded-md border border-[#1e2430] bg-[#0d1016] p-3 font-mono text-[11px] leading-relaxed text-zinc-300">
-          <code dangerouslySetInnerHTML={{ __html: highlightJson(formatted) }} />
         </pre>
       </div>
     </section>
@@ -60,14 +82,14 @@ function CodeBlock({ title, body }: { title: string; body: string | null }) {
 
 export function DetailPanel({ detail, onClose }: Props) {
   return (
-    <aside className="flex w-full flex-col border-t border-[#1e2430] bg-[#12161d] md:w-[46%] md:border-l md:border-t-0 xl:w-[42%]">
-      <div className="flex items-center gap-2 border-b border-[#1e2430] px-3 py-2">
-        <h2 className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+    <aside className="flex h-full w-full flex-col bg-slate-800">
+      <div className="flex items-center gap-2 border-b border-slate-800 px-3 py-2">
+        <h2 className="font-mono text-[11px] font-semibold uppercase tracking-wider text-slate-500">
           Detail
         </h2>
         <button
           onClick={onClose}
-          className="ml-auto rounded p-1 text-zinc-500 hover:bg-[#1c222d] hover:text-zinc-200"
+          className="ml-auto rounded p-1 text-slate-500 hover:bg-slate-700 hover:text-slate-200"
           title="Tutup panel"
           aria-label="Tutup panel detail"
         >
@@ -79,7 +101,7 @@ export function DetailPanel({ detail, onClose }: Props) {
 
       {!detail ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-2 p-6 text-center">
-          <p className="text-xs leading-relaxed text-zinc-600">
+          <p className="text-xs leading-relaxed text-slate-500">
             Klik sebuah log untuk melihat detail request &amp; response body di sini.
           </p>
         </div>
@@ -89,25 +111,25 @@ export function DetailPanel({ detail, onClose }: Props) {
             <MethodBadge method={detail.method} />
             <StatusBadge status={detail.status} />
             {detail.durationMs != null && (
-              <span className="ml-auto text-[11px] tabular-nums text-zinc-500">
+              <span className="ml-auto font-mono text-[11px] tabular-nums text-slate-500">
                 {detail.durationMs}ms
               </span>
             )}
           </div>
 
           {/* URL */}
-          <div className="rounded-md border border-[#1e2430] bg-[#0d1016] px-3 py-2">
-            <div className="pb-1 text-[10px] font-semibold uppercase tracking-wider text-zinc-600">
+          <div className="rounded-md border border-slate-800 bg-slate-950 px-3 py-2">
+            <div className="pb-1 font-mono text-[10px] font-semibold uppercase tracking-wider text-slate-500">
               URL
             </div>
-            <div className="break-all font-mono text-[11px] leading-relaxed text-zinc-200">
+            <div className="break-all font-mono text-[11px] leading-relaxed text-slate-200">
               {detail.url ?? '—'}
             </div>
           </div>
 
           {detail.activity && (
-            <div className="text-[10px] font-medium uppercase tracking-wider text-zinc-600">
-              ## {detail.activity}
+            <div className="font-mono text-[11px] tracking-wide text-slate-500">
+              {detail.activity}
             </div>
           )}
 

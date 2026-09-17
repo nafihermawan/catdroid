@@ -3,22 +3,22 @@
 @tailwind utilities;
 
 /* ── Design tokens: catdroid ─────────────────────────────────────────
-   Dev-tool dark: charcoal canvas, surface sedikit lebih terang, aksen
-   biru untuk aksi primer. Status: 2xx=green, 4xx=orange, 5xx=red. */
+   Palet slate: kanvas slate-900, panel slate-800, input/kode lebih gelap.
+   Status HTTP: 2xx=emerald, 3xx=cyan, 4xx=amber, 5xx=rose. */
 :root {
-  --bg-canvas: #0b0e13;
-  --bg-surface: #12161d;
-  --bg-surface-raised: #171c25;
-  --bg-input: #0d1016;
-  --border-subtle: #1e2430;
-  --border-strong: #2c3542;
-  --text-primary: #e8edf4;
-  --text-secondary: #9aa7b8;
-  --text-muted: #5d6a7c;
-  --accent: #4d9fff; /* blue accent */
-  --accent-strong: #2f7fe6;
-  --focus-ring: rgba(77, 159, 255, 0.4);
-  --selection: rgba(77, 159, 255, 0.25);
+  --bg-canvas: #0f172a; /* slate-900 */
+  --bg-surface: #1e293b; /* slate-800 */
+  --bg-surface-raised: #334155; /* slate-700 */
+  --bg-input: #020617; /* slate-950 */
+  --border-subtle: #1e293b; /* slate-800 */
+  --border-strong: #334155; /* slate-700 */
+  --text-primary: #f1f5f9; /* slate-100 */
+  --text-secondary: #94a3b8; /* slate-400 */
+  --text-muted: #64748b; /* slate-500 */
+  --accent: #0ea5e9; /* sky-500 */
+  --accent-strong: #0284c7; /* sky-600 */
+  --focus-ring: rgba(14, 165, 233, 0.45);
+  --selection: rgba(14, 165, 233, 0.28);
 }
 
 html,
@@ -56,7 +56,7 @@ body {
 /* Scrollbar tipis khas dev-tool */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #2c3542 transparent;
+  scrollbar-color: #334155 transparent;
 }
 *::-webkit-scrollbar {
   width: 10px;
@@ -66,13 +66,13 @@ body {
   background: transparent;
 }
 *::-webkit-scrollbar-thumb {
-  background: #2c3542;
+  background: #334155;
   border-radius: 6px;
   border: 2px solid transparent;
   background-clip: padding-box;
 }
 *::-webkit-scrollbar-thumb:hover {
-  background: #3d4a5c;
+  background: #475569;
   background-clip: padding-box;
   border: 2px solid transparent;
 }

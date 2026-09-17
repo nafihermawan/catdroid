@@ -68,6 +68,15 @@ app.post('/api/stop', (_req, res) => {
   res.json({ ok: true, running: false });
 });
 
+// Cek kompatibilitas app target (installed? running? log OkHttp aktif?)
+app.post('/api/check', async (_req, res) => {
+  try {
+    res.json(await parser.checkApp());
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
 // ── Serve frontend build (production) ─────────────────────────────────
 const distDir = path.resolve(__dirname, '..', 'dist');
 app.use(express.static(distDir));

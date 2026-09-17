@@ -8,8 +8,9 @@ const DEFAULT_APP_PACKAGE =
 
 // Strip prefix logcat "MM-DD HH:mm:ss.mmm I/tag(pid):" → sisa pesan.
 // Format `-v time`: "08-11 15:45:10.990 I/okhttp.OkHttpClient(16720): pesan"
+// Sebagian device (mis. MIUI) menaruh PID rata kanan: "( 9183)".
 export function stripPrefix(line) {
-  return line.replace(/^\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3} \w?\/[^(]+\(\d+\): /, '');
+  return line.replace(/^\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3} \w?\/[^(]+\(\s*\d+\): /, '');
 }
 
 // Ambil nama activity dari baris log transisi (beberapa format umum).
@@ -36,6 +37,27 @@ export function parseResponse(msg) {
   return m
     ? { status: Number(m[1]), url: m[2], durationMs: m[3] ? Number(m[3]) : null }
     : { status: null, url: null, durationMs: null };
+}
+
+// ── Pure helper untuk cek kompatibilitas app (bisa di-test tanpa adb) ──
+
+// Output `adb shell pm path <pkg>` → apakah app terinstall (ada "package:").
+export function parsePmPathOutput(stdout) {
+  return /package:/.test(stdout || '');
+}
+
+// Output `adb shell pidof <pkg>` → PID pertama, atau null kalau app tidak jalan.
+export function parsePidofOutput(stdout) {
+  const pid = (stdout || '').trim();
+  return pid || null;
+}
+
+// Cek dump logcat (format "-v time") punya baris OkHttp dari PID app.
+// Contoh: "08-13 10:15:22.123 I/okhttp.OkHttpClient(23456): --> GET ..."
+export function hasOkHttpLog(logcatDump, pid) {
+  if (!pid) return false;
+  const re = new RegExp(`okhttp\\.OkHttpClient\\(\\s*${pid}\\):`);
+  return re.test(logcatDump || '');
 }
 
 // State machine per baris logcat — logika disalin dari
@@ -249,10 +271,103 @@ export function createLogcatParser({
     emit({ type: 'stopped' });
   }
 
+  // Cek kompatibilitas app target dengan CatDroid via adb (read-only).
+  // Return objek status tiap check + verdict `compatible` + saran.
+  async function checkApp() {
+    const checks = {
+      adb: { ok: true, message: `adb tersedia (${adbPath})` },
+      device: { ok: true, message: 'Device terhubung' },
+      installed: { ok: false, message: `App ${appPackage} tidak ditemukan` },
+      running: { ok: false, message: `App ${appPackage} tidak berjalan` },
+      okhttp: { ok: false, message: 'Belum ada log okhttp.OkHttpClient dari app ini' },
+    };
+    const suggestions = [];
+
+    try {
+      await checkAdb();
+    } catch (err) {
+      checks.adb = { ok: false, message: err.message };
+      checks.device = { ok: false, message: 'Device tidak terdeteksi' };
+      return {
+        appPackage,
+        ...checks,
+        compatible: false,
+        suggestions: [err.message],
+      };
+    }
+
+    // `pm path` dan `pidof` keluar dengan status != 0 kalau package/prosesnya
+    // tidak ada — itu jawaban yang valid, bukan kegagalan perintah.
+    let pmOut = '';
+    try {
+      pmOut = await runCmd(adbPath, ['shell', 'pm', 'path', appPackage]);
+    } catch (_) {
+      // biarkan kosong → parsePmPathOutput() mengembalikan false
+    }
+
+    if (parsePmPathOutput(pmOut)) {
+      checks.installed = { ok: true, message: `App ${appPackage} terinstall` };
+    } else {
+      suggestions.push(
+        `App "${appPackage}" tidak terinstall di device. Install app-nya dulu, ` +
+          `atau sesuaikan ANDROID_APP_PACKAGE di .env.`
+      );
+    }
+
+    let pid = null;
+    try {
+      pid = parsePidofOutput(await runCmd(adbPath, ['shell', 'pidof', appPackage]));
+    } catch (_) {
+      // tidak ada proses dengan nama package itu
+    }
+
+    if (pid) {
+      checks.running = { ok: true, message: `App berjalan (PID ${pid})` };
+    } else {
+      suggestions.push(
+        'Buka app di device dulu (log OkHttp hanya muncul saat app berjalan).'
+      );
+    }
+
+    if (!pid) {
+      // Tanpa PID, log okhttp tidak bisa dipastikan milik app ini.
+      checks.okhttp = {
+        ok: false,
+        message: 'Belum bisa diverifikasi — app belum berjalan',
+      };
+    } else {
+      // Scan SELURUH buffer, bukan `-t <count>`: opsi itu mengambil N baris
+      // terakhir dari seluruh log lalu baru difilter tag, jadi di device yang
+      // ramai request okhttp hampir selalu jatuh di luar jendela dan app yang
+      // sebenarnya normal jadi ketahuan "tidak menulis log".
+      // `-v time` supaya PID ikut di format "tag(pid)" seperti saat capture.
+      const dump = await runCmd(adbPath, [
+        'logcat', '-d', '-v', 'time', '-s', 'okhttp.OkHttpClient',
+      ]);
+      if (hasOkHttpLog(dump, pid)) {
+        checks.okhttp = {
+          ok: true,
+          message: 'Log okhttp.OkHttpClient aktif (interceptor logging terpasang)',
+        };
+      } else {
+        suggestions.push(
+          `Belum ada request OkHttp dari app ini (PID ${pid}) di buffer logcat. ` +
+            'Pakai app-nya dulu — buka halaman yang memanggil API — lalu tekan Re-check. ' +
+            'Kalau tetap kosong, pastikan HttpLoggingInterceptor level BODY terpasang ' +
+            '(lihat docs/INTEGRASI.md).'
+        );
+      }
+    }
+
+    const compatible = checks.adb.ok && checks.installed.ok && checks.okhttp.ok;
+    return { appPackage, ...checks, compatible, suggestions };
+  }
+
   return {
     processLine,
     start,
     stop,
+    checkApp,
     get running() {
       return proc !== null;
     },

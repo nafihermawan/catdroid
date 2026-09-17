@@ -14,7 +14,7 @@ export function highlightJson(text: string): string {
           ? `<span class="text-sky-300">${key}</span>${colon}`
           : `<span class="text-emerald-300">${key}</span>`;
       }
-      if (literal) return `<span class="text-orange-300">${literal}</span>`;
+      if (literal) return `<span class="text-cyan-300">${literal}</span>`;
       return `<span class="text-amber-300">${match}</span>`;
     }
   );
@@ -28,11 +28,14 @@ export function formatJson(text: string): string {
   }
 }
 
-/** Warna status code untuk badge/teks. */
-export function statusTone(status: number | null): string {
-  if (status == null) return 'text-zinc-500';
-  if (status >= 200 && status < 300) return 'text-emerald-400';
-  if (status >= 300 && status < 400) return 'text-sky-400';
-  if (status >= 400 && status < 500) return 'text-amber-400';
-  return 'text-red-400';
+/**
+ * Bersihkan nama activity dari logcat sebelum ditampilkan: buang penanda
+ * Markdown (`##`) serta spasi di ujung. Server sudah mengirim nama class
+ * (`SPNScheduleActivity`), jadi fungsi ini murni jaring pengaman tampilan.
+ */
+export function sanitizeActivityName(rawTag: string): string {
+  const cleanName = String(rawTag ?? '')
+    .replace(/^#+\s*/, '')
+    .trim();
+  return cleanName || 'Unknown Activity';
 }

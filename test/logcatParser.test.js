@@ -3,6 +3,9 @@ import assert from 'node:assert/strict';
 import {
   createLogcatParser,
   extractActivity,
+  hasOkHttpLog,
+  parsePidofOutput,
+  parsePmPathOutput,
   parseRequest,
   parseResponse,
   stripPrefix,
@@ -37,6 +40,10 @@ const ACTIVITY_DISPLAYED_LINE =
 const NON_OKHTTP_LINE =
   `${PREFIX} D/eglCodecCommon(23456): setVertexArrayObject: set vao to 1 (0x1) 0 0`;
 
+// Sebagian device (mis. MIUI) menaruh PID rata kanan → "( 23456)".
+const PADDED_REQUEST_LINE =
+  `${PREFIX} I/okhttp.OkHttpClient( 23456): --> POST https://api.example.com/login`;
+
 // helper: jalankan parser pada daftar baris, kumpulkan event
 function run(lines, options) {
   const events = [];
@@ -50,6 +57,26 @@ test('stripPrefix menghapus prefix logcat', () => {
     stripPrefix(LOGIN_REQUEST_LINE),
     '--> POST https://api.example.com/login'
   );
+});
+
+test('stripPrefix mendukung PID rata kanan "( 23456)"', () => {
+  assert.equal(
+    stripPrefix(PADDED_REQUEST_LINE),
+    '--> POST https://api.example.com/login'
+  );
+});
+
+test('request dengan PID rata kanan tetap ter-emit', () => {
+  const events = run([PADDED_REQUEST_LINE]);
+  assert.deepEqual(events, [
+    {
+      type: 'request',
+      id: 1,
+      method: 'POST',
+      url: 'https://api.example.com/login',
+      message: '--> POST https://api.example.com/login',
+    },
+  ]);
 });
 
 test('extractActivity mengenali format START / Displayed / cmp=', () => {
@@ -129,13 +156,17 @@ test('response dengan body: emit response lalu body', () => {
 });
 
 test('transisi activity: emit event activity hanya saat nama berubah (dengan short name)', () => {
-  // baris activity sebelum request — nama activity berubah dari null
-  const events = run([
-    ACTIVITY_START_LINE,
-    LOGIN_REQUEST_LINE,
-    LOGIN_REQUEST_END_LINE,
-    ACTIVITY_DISPLAYED_LINE, // nama activity SAMA — tidak emit activity lagi
-  ]);
+  // baris activity sebelum request — nama activity berubah dari null.
+  // appPackage eksplisit supaya test tidak bergantung pada env ANDROID_APP_PACKAGE.
+  const events = run(
+    [
+      ACTIVITY_START_LINE,
+      LOGIN_REQUEST_LINE,
+      LOGIN_REQUEST_END_LINE,
+      ACTIVITY_DISPLAYED_LINE, // nama activity SAMA — tidak emit activity lagi
+    ],
+    { appPackage: 'com.example.myapp' }
+  );
 
   assert.equal(events.filter((e) => e.type === 'activity').length, 1);
   assert.deepEqual(
@@ -168,4 +199,31 @@ test('body multi-baris digabung jadi satu baris (minified)', () => {
   ]);
   assert.equal(events[1].type, 'body');
   assert.equal(events[1].body, '{"user": { "name": "Nafi" }}');
+});
+
+// ── Pure helper cek kompatibilitas app ────────────────────────────────
+
+test('parsePmPathOutput: mendeteksi app terinstall dari output pm path', () => {
+  assert.equal(
+    parsePmPathOutput('package:/data/app/~~abc123==/com.example.app-1/base.apk\n'),
+    true
+  );
+  assert.equal(parsePmPathOutput(''), false);
+});
+
+test('parsePidofOutput: mengambil PID atau null kalau app tidak jalan', () => {
+  assert.equal(parsePidofOutput('23456\n'), '23456');
+  assert.equal(parsePidofOutput(''), null);
+  assert.equal(parsePidofOutput('   \n'), null);
+});
+
+test('hasOkHttpLog: mendeteksi baris okhttp dari PID app', () => {
+  const dump = `${PREFIX} I/okhttp.OkHttpClient(23456): --> POST https://api.example.com/login\n`;
+  assert.equal(hasOkHttpLog(dump, '23456'), true);
+  // PID rata kanan (MIUI) → tetap cocok
+  assert.equal(hasOkHttpLog(PADDED_REQUEST_LINE, '23456'), true);
+  // PID berbeda / dump kosong → tidak cocok
+  assert.equal(hasOkHttpLog(dump, '99999'), false);
+  assert.equal(hasOkHttpLog('', '23456'), false);
+  assert.equal(hasOkHttpLog(dump, null), false);
 });

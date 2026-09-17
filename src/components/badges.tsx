@@ -6,16 +6,16 @@ export function MethodBadge({ method }: { method: string | null }) {
   if (!method) return null;
   const color =
     method === 'GET'
-      ? 'bg-sky-500/15 text-sky-300 ring-sky-500/30'
+      ? 'bg-sky-500/10 text-sky-400 ring-sky-500/30'
       : method === 'POST'
-        ? 'bg-emerald-500/15 text-emerald-300 ring-emerald-500/30'
+        ? 'bg-emerald-500/10 text-emerald-400 ring-emerald-500/30'
         : method === 'PUT'
-          ? 'bg-amber-500/15 text-amber-300 ring-amber-500/30'
+          ? 'bg-amber-500/10 text-amber-400 ring-amber-500/30'
           : method === 'PATCH'
-            ? 'bg-orange-500/15 text-orange-300 ring-orange-500/30'
+            ? 'bg-cyan-500/10 text-cyan-400 ring-cyan-500/30'
             : method === 'DELETE'
-              ? 'bg-red-500/15 text-red-300 ring-red-500/30'
-              : 'bg-zinc-500/15 text-zinc-300 ring-zinc-500/30';
+              ? 'bg-rose-500/10 text-rose-400 ring-rose-500/30'
+              : 'bg-slate-500/10 text-slate-400 ring-slate-500/30';
   return (
     <span
       className={`inline-block min-w-[4.5ch] rounded px-1.5 py-0.5 text-center font-mono text-[10px] font-semibold leading-none ring-1 ${color}`}
@@ -29,12 +29,12 @@ export function StatusBadge({ status }: { status: number | null }) {
   if (status == null) return null;
   const tone =
     status >= 200 && status < 300
-      ? 'bg-emerald-500/15 text-emerald-300 ring-emerald-500/30'
+      ? 'bg-emerald-500/10 text-emerald-400 ring-emerald-500/30'
       : status >= 300 && status < 400
-        ? 'bg-sky-500/15 text-sky-300 ring-sky-500/30'
+        ? 'bg-cyan-500/10 text-cyan-400 ring-cyan-500/30'
         : status >= 400 && status < 500
-          ? 'bg-orange-500/15 text-orange-300 ring-orange-500/30'
-          : 'bg-red-500/15 text-red-300 ring-red-500/30';
+          ? 'bg-amber-500/10 text-amber-400 ring-amber-500/30'
+          : 'bg-rose-500/10 text-rose-400 ring-rose-500/30';
   return (
     <span
       className={`inline-block min-w-[3.5ch] rounded px-1.5 py-0.5 text-center font-mono text-[10px] font-semibold leading-none ring-1 ${tone}`}

@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { AppCheckModal } from './components/AppCheckModal';
+import { CheckAppButton } from './components/CheckAppButton';
 import { FilterBar } from './components/FilterBar';
 import { LogViewer } from './components/LogViewer';
 import { useLogcatStream } from './hooks/useLogcatStream';
@@ -49,8 +51,8 @@ function ActionButton({
     : danger
       ? 'bg-red-500 text-white hover:bg-red-400'
       : dangerHover
-        ? 'bg-transparent text-zinc-300 ring-1 ring-[#2c3542] hover:bg-red-500/10 hover:text-red-300 hover:ring-red-500/40'
-        : 'bg-transparent text-zinc-300 ring-1 ring-[#2c3542] hover:bg-[#1c222d] hover:text-white';
+        ? 'bg-transparent text-slate-300 ring-1 ring-slate-700 hover:bg-red-500/10 hover:text-red-300 hover:ring-red-500/40'
+        : 'bg-transparent text-slate-300 ring-1 ring-slate-700 hover:bg-slate-700 hover:text-white';
   return (
     <button
       onClick={onClick}
@@ -71,12 +73,18 @@ export default function App() {
     setError,
     keywordInput,
     setKeywordInput,
+    checkResult,
+    checking,
+    checkError,
+    checkedAt,
+    runCheck,
     start,
     stop,
     clear,
   } = useLogcatStream();
 
   const [autoScroll, setAutoScroll] = useState(true);
+  const [checkOpen, setCheckOpen] = useState(false);
   const [clearFlash, setClearFlash] = useState(false);
   const clearTimerRef = useRef<number | null>(null);
 
@@ -103,6 +111,12 @@ export default function App() {
     [keywordInput]
   );
 
+  // Buka modal lebih dulu supaya loading state-nya langsung terlihat.
+  const handleCheck = () => {
+    setCheckOpen(true);
+    runCheck();
+  };
+
   const handleExport = () => {
     const text = buildExportText(entries);
     const blob = new Blob([text], { type: 'text/plain' });
@@ -115,17 +129,17 @@ export default function App() {
   };
 
   return (
-    <div className="flex h-screen flex-col bg-[#0b0e13] text-zinc-100">
-      <header className="flex items-center gap-3 border-b border-[#1e2430] bg-[#12161d] px-3 py-2">
+    <div className="flex h-screen flex-col bg-slate-900 text-slate-100">
+      <header className="flex items-center gap-3 border-b border-slate-800 bg-slate-800 px-3 py-2">
         <img src="/catdroid.png" alt="CatDroid logo" className="h-6 w-6 rounded-full object-cover" />
-        <h1 className="-ml-2 text-sm font-semibold tracking-wide text-zinc-100">CatDroid</h1>
+        <h1 className="-ml-2 font-mono text-sm font-semibold tracking-wide text-slate-100">CatDroid</h1>
         <span
           className={`h-2 w-2 rounded-full ${
             status.running
               ? 'animate-pulse bg-red-500'
               : status.connected
                 ? 'bg-emerald-500'
-                : 'bg-zinc-600'
+                : 'bg-slate-600'
           }`}
           title={
             status.running
@@ -168,6 +182,16 @@ export default function App() {
         onToggleAutoScroll={() => setAutoScroll((a) => !a)}
         toolbarActions={
           <div className="flex items-center gap-2">
+            <CheckAppButton
+              checking={checking}
+              disabled={!status.connected}
+              title={
+                status.connected
+                  ? 'Cek apakah app target kompatibel dengan CatDroid'
+                  : 'Server belum terhubung'
+              }
+              onClick={handleCheck}
+            />
             {!status.running ? (
               <ActionButton
                 onClick={start}
@@ -193,6 +217,16 @@ export default function App() {
             </ActionButton>
           </div>
         }
+      />
+
+      <AppCheckModal
+        open={checkOpen}
+        checking={checking}
+        result={checkResult}
+        error={checkError}
+        checkedAt={checkedAt}
+        onRecheck={runCheck}
+        onClose={() => setCheckOpen(false)}
       />
     </div>
   );

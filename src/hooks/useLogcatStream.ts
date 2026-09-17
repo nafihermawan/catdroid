@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { LogEntry, ServerEvent } from '../types';
+import type { AppCheckResult, LogEntry, ServerEvent } from '../types';
 
 export interface StreamStatus {
   connected: boolean;
@@ -18,6 +18,12 @@ export function useLogcatStream() {
     running: false,
   });
   const [error, setError] = useState<string | null>(null);
+  // Hasil cek kompatibilitas app (POST /api/check).
+  const [checkResult, setCheckResult] = useState<AppCheckResult | null>(null);
+  const [checking, setChecking] = useState(false);
+  const [checkError, setCheckError] = useState<string | null>(null);
+  // Waktu selesainya pengecekan terakhir (untuk footer modal).
+  const [checkedAt, setCheckedAt] = useState<number | null>(null);
   const [config, setConfig] = useState<{
     adbPath: string;
     appPackage: string;
@@ -155,6 +161,25 @@ export function useLogcatStream() {
     setEntries([]);
   }, []);
 
+  const runCheck = useCallback(async () => {
+    setChecking(true);
+    setCheckError(null);
+    try {
+      const res = await fetch('/api/check', { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok || data.ok === false) {
+        setCheckError(data.error || 'Gagal cek kompatibilitas app.');
+      } else {
+        setCheckResult(data as AppCheckResult);
+      }
+    } catch {
+      setCheckError('Server tidak merespons. Pastikan server backend berjalan.');
+    } finally {
+      setChecking(false);
+      setCheckedAt(Date.now());
+    }
+  }, []);
+
   return {
     entries,
     status,
@@ -163,6 +188,11 @@ export function useLogcatStream() {
     config,
     keywordInput,
     setKeywordInput,
+    checkResult,
+    checking,
+    checkError,
+    checkedAt,
+    runCheck,
     start,
     stop,
     clear,

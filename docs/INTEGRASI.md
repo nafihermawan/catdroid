@@ -101,7 +101,22 @@ URL_FILTER_KEYWORDS=api.target.com
 
 ## 3. Verifikasi cepat (sebelum buka CatDroid)
 
-Pastikan app benar-benar menulis log OkHttp ke logcat:
+CatDroid punya tombol **Check App** di toolbar (ikon stetoskop) yang mengecek
+kompatibilitas app secara otomatis via adb:
+
+1. Pastikan device terhubung dan app sudah dibuka di device.
+2. Klik **Check App**.
+3. Panel hasil menampilkan checklist:
+   - **adb** — biner adb ditemukan.
+   - **Device** — ada device terhubung (status `device`).
+   - **App terinstall** — `ANDROID_APP_PACKAGE` ada di device.
+   - **App berjalan** — app sedang jalan (informatif; kalau ✗ hanya berarti app
+     belum dibuka, buka dulu lalu cek ulang).
+   - **Log okhttp.OkHttpClient** — bukti interceptor logging aktif. Kalau ✗,
+     traffic app tidak akan terlihat; lihat [Troubleshooting](#6-troubleshooting-khusus-app).
+4. Kalau **App siap dipakai**, langsung klik **Start** untuk mulai capture.
+
+Cara manual tanpa UI (untuk verifikasi cepat di terminal):
 
 ```bash
 adb logcat -s okhttp.OkHttpClient

@@ -44,3 +44,22 @@ export interface ExchangeDetail {
   requestBody: string | null;
   responseBody: string | null;
 }
+
+// ── Hasil cek kompatibilitas app (POST /api/check) ────────────────────
+
+export interface CheckItem {
+  ok: boolean;
+  message: string;
+}
+
+export interface AppCheckResult {
+  appPackage: string;
+  adb: CheckItem;
+  device: CheckItem;
+  installed: CheckItem;
+  running: CheckItem;
+  okhttp: CheckItem;
+  /** Verdict: adb ok && installed ok && okhttp ok (running tidak wajib). */
+  compatible: boolean;
+  suggestions: string[];
+}
